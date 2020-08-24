@@ -1,0 +1,32 @@
+from rest_framework import serializers
+from .models import Task
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password']  # タプルでも良い
+        extra_kwargs = {'password': {'write_only': True, 'required': True}}
+
+    def create(user, validated_data):
+        # ユーザーを作るメソッドに上書き　
+        # パスワードをハッシュ化する為
+        user = User.objects.create_user(**validated_data)
+        # ユーザー新規生成時にトークンを作成
+        Token.objects.create(user=user)
+        return　user
+
+
+class TaskSeriaLizer(serializers.ModelSerializer):
+
+    # DatetimeFieldの表記が長いので書き換える。
+    created_at = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M", read_only=True)
+    updated_at = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M", read_only=True)
+
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'created_at', 'updated_at']
